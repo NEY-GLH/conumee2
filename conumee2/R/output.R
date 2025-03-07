@@ -21,7 +21,6 @@
 #' @param bins_cex Default to \code{0.75}. Alternatively, the size of individual bin dots is inversely proportional to its variance of included probes' log2-ratios. Choose either \code{standardized} for fixed dot sizes (to make plots from different samples comparable) or \code{sample_level} (to scale the dot sizes for each sample individually)
 #' @param sig_cgenes logical. Should the significant genes from the Cancer Gene Census be plotted that were identified with \code{CNV.focal}? Default to \code{FALSE}.
 #' @param nsig_cgenes numeric. How many significant genes identified with \code{CNV.focal} should be plotted? Default to \code{3}. We do not recommend using values higher than 5 in order to avoid false positive results.
-#' @param focal_thresholds logical. Should the dynamic thresholds be plotted? Default to \code{TRUE}. \code{sig_cgenes} must be \code{TRUE}.
 #' @param main character vector. Title of the plot(s). Default to sample names. Please provide a vector of the same length as the number of samples.
 #' @param ylim numeric vector. The y limits of the plot. Default to \code{c(-1.25, 1.25)}.
 #' @param set_par logical. Use recommended graphical parameters for \code{oma} and \code{mar}? Defaults to \code{TRUE}. Original parameters are restored afterwards.
@@ -822,10 +821,10 @@ setMethod("CNV.heatmap", signature(object = "CNV.analysis"), function(object,
 #' @description Output CNV analysis results as table.
 #' @param object \code{CNV.analysis} object.
 #' @param file Path where output file should be written to. Defaults to \code{NULL}: No file is written, table is returned as data.frame object.
-#' @param what character. This should be (an unambiguous abbreviation of) one of \code{'probes'}, \code{'bins'}, \code{'detail'}, \code{'segments'}, \code{gistic}, \code{threshold} (for CNV.summaryplot) or \code{focal}. Defaults to \code{'segments'}.
-#' @param threshold numeric. Threshold for determining the copy number state. Defaults to \code{0.1}. See Description for details.
+#' @param what character. This should be (an unambiguous abbreviation of) one of \code{'probes'}, \code{'bins'}, \code{'detail'}, \code{'segments'}, \code{gistic} or \code{focal}. Defaults to \code{'segments'}.
+#' @param threshold numeric. This parameter is used internally for creating summaryplots. It should not be changed. If you intend to change the threshold for summaryplots, please do so within the \code{CNV.summaryplot} function.
 #' @param ... Additional parameters (\code{CNV.write} generic, currently not used).
-#' @details  Function shows the output of the CNV analysis with conumee 2. To use the results as input for GISTIC choose \code{what = 'gistic'}. To assign the resulting segments to their copy number state and their size (focal, arm-level or whole chromosome) choose \code{what = 'overview'}. The threshold for the log2-ratio to identify gains or losses is \code{0.1} by default. To access the results from the Segmented Block Bootstrapping, use \code{what = focal}.
+#' @details  Function shows the output of the CNV analysis with conumee 2. To use the results as input for GISTIC choose \code{what = 'gistic'}. To access the results from \code{CNV.focal}, use \code{what = focal}.
 #' @examples
 #' # prepare
 #' library(minfiData)
@@ -850,7 +849,6 @@ setMethod("CNV.heatmap", signature(object = "CNV.analysis"), function(object,
 #' CNV.write(x, what = 'bins')
 #' CNV.write(x, what = 'probes')
 #' CNV.write(x, what = 'gistic')
-#' CNV.write(x, what = 'overview')
 #' CNV.write(x, what = 'focal')
 #' @return if parameter \code{file} is not supplied, the table is returned as a \code{data.frame} object.
 #' @author Bjarne Daenekas, Volker Hovestadt \email{conumee@@hovestadt.bio}
@@ -967,22 +965,27 @@ setMethod("CNV.write", signature(object = "CNV.analysis"), function(object, file
     new_col[which(x$Seg.CN <= -threshold)] <- "loss"
     x$Alteration <- new_col
   } else if (w == 7){
-    stop("Please run CNV.focal")
+    if(!is.element("amp.detail.regions",names(object@detail))){
+      stop("Please run CNV.focal")
+    }
     x <- vector(mode='list', length = 6)
-    x[[1]] <- object@detail$amp.bins
-    x[[2]] <- object@detail$del.bins
-    x[[3]] <- object@detail$amp.detail.regions
-    x[[4]] <- object@detail$del.detail.regions
+    x[[1]] <- object@detail$amp.detail.regions
+    x[[2]] <- object@detail$del.detail.regions
+    x[[3]] <- object@detail$amp.bins
+    x[[4]] <- object@detail$del.bins
     x[[5]] <- object@detail$amp.cancer.genes
     x[[6]] <- object@detail$del.cancer.genes
-    names(x) <- c("bins within amplified regions", "bins within lost regions", "amplified detail regions",
-                  "deleted detail regions", "amplified genes from the Cancer Gene Census", "deleted genes from the Cancer Gene Census")
+    names(x) <- c("amplified detail regions", "deleted detail regions", "bins within amplified regions",
+                  "bins within lost regions", "amplified genes from the Cancer Gene Census", "deleted genes from the Cancer Gene Census")
   } else{
     stop("value for what is ambigious.")
   }
   if (is.null(file)) {
     return(x)
   } else {
+    if(w == 7){
+    stop("please save results from focal analysis manually")
+    }
     write.table(x, file = file, quote = FALSE, sep = "\t", row.names = FALSE)
   }
 })
