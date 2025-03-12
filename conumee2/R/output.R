@@ -30,6 +30,7 @@
 #' @param width numeric. Width in inches of the saved files. Defaults to \code{12}.
 #' @param height numeric. Height in inches of the saved files. Defaults to \code{8}
 #' @param res numeric. Resolution of the saved .png files. Defaults to \code{720}
+#' @param genome character. This parameter can be set to \code{hg38} when working with EPICv2 data.
 #' @param ... Additional parameters (\code{CNV.detailplot} generic, currently not used).
 #' @return \code{NULL}.
 #' @details This method provides the functionality for generating CNV plots for the whole genome or defined chromosomes. Bins are shown as dots, segments are shown as lines. See parameters for more information.
@@ -114,6 +115,7 @@ setMethod("CNV.genomeplot", signature(object = "CNV.analysis"), function(object,
       chr <- object@anno@genome$chr
     } else {
       chr <- intersect(chr, object@anno@genome$chr)
+      plotKaryotype(genome = genome, chromosomes = c(chr))
     }
 
     chr.cumsum0 <- .cumsum0(object@anno@genome[chr, "size"], n = chr)
@@ -338,7 +340,8 @@ setGeneric("CNV.detailplot", function(object, ...) {
 #' @rdname CNV.detailplot
 setMethod("CNV.detailplot", signature(object = "CNV.analysis"),
           function(object, name, yaxt = "l", ylim = c(-1.25, 1.25), set_par = TRUE, output = "local", columns = NULL, main = NULL,
-                   directory = getwd(), width = 12, height = 8, res = 720, cols = c("darkblue","darkblue", "lightgrey", "#F16729", "#F16729")) {
+                   directory = getwd(), width = 12, height = 8, res = 720, cols = c("darkblue","darkblue", "lightgrey", "#F16729", "#F16729"),
+                   genome = "hg19") {
 
             if (!is.element(name, values(object@anno@detail)$name))
               stop("detail_name not in list of detail regions.")
@@ -423,7 +426,7 @@ setMethod("CNV.detailplot", signature(object = "CNV.analysis"),
                     col = "black", lwd = 1)
 
               segs <- GRanges(seqnames = object@seg$summary[[i]]$chrom, IRanges(start = object@seg$summary[[i]]$loc.start, end = object@seg$summary[[i]]$loc.end),
-                              seqinfo = Seqinfo(genome = "hg19"))
+                              seqinfo = Seqinfo(genome = genome))
               segs$seg.median <- object@seg$summary[[i]]$seg.median - object@bin$shift[i]
               segs <- segs[subjectHits(findOverlaps(query = detail.gene, subject = segs, type = "any"))]
               lines(as.vector(rbind(rep(start(segs), each = 2), rep(end(segs), each = 2))),

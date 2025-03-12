@@ -56,7 +56,7 @@ setMethod("CNV.fit", signature(query = "CNV.data", ref = "CNV.data", anno = "CNV
             if (!all(is.element(p, rownames(query@intensity)))) {   # check if all probes are there
               if("IlmnID" %in% colnames(values(anno@probes))) {   # if not, check if full IlmnID identifiers are used
                 if(all(is.element(unique(anno@probes$IlmnID), rownames(query@intensity)))) {   # if yes, change the data object
-                  query@intensity <- query@intensity[anno@probes$IlmnID, ]
+                  query@intensity <- as.data.frame(query@intensity[anno@probes$IlmnID, ]) # If we only have one sample this becomes a list and gets sad
                   rownames(query@intensity) <- names(anno@probes)
                 } else {
                   stop("query intensities not given for all probes.")
