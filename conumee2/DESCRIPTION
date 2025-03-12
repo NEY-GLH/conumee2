@@ -21,7 +21,8 @@ Depends:
     minfi,
     RnBeads,
     illuminaio,
-    nullranges
+    nullranges,
+    karyoploteR
 Suggests:
     BiocStyle,
     knitr,
@@ -39,7 +40,6 @@ Collate:
     process.R
     output.R
     data.R
-Remotes: bioc::3.20/karyoploteR
 biocViews: CopyNumberVariation, DNAMethylation, MethylationArray, Microarray,
     Normalization, Preprocessing, QualityControl, Software
 VignetteBuilder: knitr

@@ -115,6 +115,7 @@ setMethod("CNV.genomeplot", signature(object = "CNV.analysis"), function(object,
       chr <- object@anno@genome$chr
     } else {
       chr <- intersect(chr, object@anno@genome$chr)
+      plotKaryotype(genome = genome, chromosomes = c(chr))
     }
 
     chr.cumsum0 <- .cumsum0(object@anno@genome[chr, "size"], n = chr)
