@@ -28,112 +28,146 @@ setGeneric("CNV.load", function(input, ...) {
 })
 
 #' @rdname CNV.load
-setMethod("CNV.load", signature(input = "MethylSet"), function(input, names = NULL) {
-  object <- new("CNV.data")
+setMethod(
+  "CNV.load",
+  signature(input = "MethylSet"),
+  function(input, names = NULL) {
+    object <- new("CNV.data")
 
-  object@intensity <- as.data.frame(minfi::getMeth(input) + minfi::getUnmeth(input))
+    object@intensity <- as.data.frame(
+      minfi::getMeth(input) + minfi::getUnmeth(input)
+    )
 
-  input.names <- grep("Name", setdiff(colnames(minfi::pData(input)),
-                                      c("Basename", "filenames")), ignore.case = TRUE)
-  if (length(input.names) > 0)
-    names(object) <- minfi::pData(input)[, grep("name", setdiff(colnames(minfi::pData(input)),
-                                                                c("Basename", "filenames")), ignore.case = TRUE)[1]]
-  if (!is.null(names))
-    names(object) <- names
+    input.names <- grep(
+      "Name",
+      setdiff(colnames(minfi::pData(input)), c("Basename", "filenames")),
+      ignore.case = TRUE
+    )
+    if (length(input.names) > 0)
+      names(object) <- minfi::pData(input)[, grep(
+        "name",
+        setdiff(colnames(minfi::pData(input)), c("Basename", "filenames")),
+        ignore.case = TRUE
+      )[1]]
+    if (!is.null(names)) names(object) <- names
 
-  object <- CNV.check(object)
+    object <- CNV.check(object)
 
-  return(object)
-})
-
-#' @rdname CNV.load
-setMethod("CNV.load", signature(input = "data.frame"), function(input, names = NULL) {
-  object <- new("CNV.data")
-  object@date <- date()
-
-  if (any(grepl("TargetID", colnames(input))))
-    rownames(input) <- input[, "TargetID"]
-  if (any(grepl("ID_REF", colnames(input))))
-    rownames(input) <- input[, "ID_REF"]
-  if (is.null(rownames(input)))
-    stop("intensities not given for all probes.")
-
-  if (any(grepl("intensity", colnames(input), ignore.case = TRUE))) {
-    input.i <- grep("intensity", colnames(input), ignore.case = TRUE)
-    input.n <- sapply(strsplit(colnames(input), "\\.", colnames(input))[input.i],
-                      function(x) paste(x[!grepl("intensity", x, ignore.case = TRUE)],
-                                        collapse = "."))
-    object@intensity <- as.data.frame(input[, input.i])
-    colnames(object@intensity) <- make.names(input.n, unique = TRUE)
-  } else if (any(grepl("signal", colnames(input), ignore.case = TRUE))) {
-    input.i <- grep("signal", colnames(input), ignore.case = TRUE)
-    input.n <- sapply(strsplit(colnames(input), "\\.", colnames(input))[input.i],
-                      function(x) paste(x[!grepl("signal|methylated", x, ignore.case = TRUE)],
-                                        collapse = "."))
-    if (!all(input.n[seq(1, length(input.i), 2)] == input.n[seq(2,
-                                                                length(input.i), 2)]))
-      stop("names of both signal columns do not match.")
-    object@intensity <- as.data.frame(input[, input.i[seq(1, length(input.i),
-                                                          2)]] + input[, input.i[seq(2, length(input.i), 2)]])
-    colnames(object@intensity) <- make.names(input.n[seq(1, length(input.i),
-                                                         2)], unique = TRUE)
-  } else {
-    object@intensity <- as.data.frame(input)
+    return(object)
   }
-  if (!is.null(names))
-    names(object) <- names
-
-  object <- CNV.check(object)
-
-  return(object)
-})
-#' @rdname CNV.load
-setMethod("CNV.load", signature(input = "matrix"), function(input, names = NULL,...) {
-  CNV.load(as.data.frame(input), names)
-})
+)
 
 #' @rdname CNV.load
-setMethod("CNV.load", signature(input = "numeric"), function(input, names = NULL) {
-  object <- new("CNV.data")
+setMethod(
+  "CNV.load",
+  signature(input = "data.frame"),
+  function(input, names = NULL) {
+    object <- new("CNV.data")
+    object@date <- date()
 
-  if (is.null(names(input)))
-    stop("intensities not given for all probes.")
+    if (any(grepl("TargetID", colnames(input)))) rownames(input) <- input[, "TargetID"]
+    if (any(grepl("ID_REF", colnames(input)))) rownames(input) <- input[, "ID_REF"]
+    if (is.null(rownames(input))) stop("intensities not given for all probes.")
 
-  n <- input
-  if(nchar(names(n)[1]) > 10) {
-    probes <- substr(names(n), 1, nchar(names(n))-5)
-    n <- n[-which(duplicated(probes))]
-    names(n) <- probes[-which(duplicated(probes))]
+    if (any(grepl("intensity", colnames(input), ignore.case = TRUE))) {
+      input.i <- grep("intensity", colnames(input), ignore.case = TRUE)
+      input.n <- sapply(
+        strsplit(colnames(input), "\\.", colnames(input))[input.i],
+        function(x) paste(x[!grepl("intensity", x, ignore.case = TRUE)], collapse = ".")
+      )
+      object@intensity <- as.data.frame(input[, input.i])
+      colnames(object@intensity) <- make.names(input.n, unique = TRUE)
+    } else if (any(grepl("signal", colnames(input), ignore.case = TRUE))) {
+      input.i <- grep("signal", colnames(input), ignore.case = TRUE)
+      input.n <- sapply(
+        strsplit(colnames(input), "\\.", colnames(input))[input.i],
+        function(x)
+          paste(
+            x[!grepl("signal|methylated", x, ignore.case = TRUE)],
+            collapse = "."
+          )
+      )
+      if (
+        !all(
+          input.n[seq(1, length(input.i), 2)] == input.n[seq(2, length(input.i), 2)]
+        )
+      )
+        stop("names of both signal columns do not match.")
+      object@intensity <- as.data.frame(
+        input[, input.i[seq(1, length(input.i), 2)]] +
+          input[, input.i[seq(2, length(input.i), 2)]]
+      )
+      colnames(object@intensity) <- make.names(
+        input.n[seq(1, length(input.i), 2)],
+        unique = TRUE
+      )
+    } else {
+      object@intensity <- as.data.frame(input)
+    }
+    if (!is.null(names)) names(object) <- names
+
+    object <- CNV.check(object)
+
+    return(object)
   }
-
-  object@intensity <- data.frame(sampleid = n)
-
-  if (!is.null(names))
-    names(object) <- names
-
-  object <- CNV.check(object)
-
-  return(object)
-})
+)
+#' @rdname CNV.load
+setMethod(
+  "CNV.load",
+  signature(input = "matrix"),
+  function(input, names = NULL, ...) {
+    CNV.load(as.data.frame(input), names)
+  }
+)
 
 #' @rdname CNV.load
-setMethod("CNV.load", signature(input = "RnBeadRawSet"), function(input, names = NULL) {
-  object <- new("CNV.data")
-  object@date <- date()
+setMethod(
+  "CNV.load",
+  signature(input = "numeric"),
+  function(input, names = NULL) {
+    object <- new("CNV.data")
 
-  M <- input@M
-  U <- input@U
+    if (is.null(names(input))) stop("intensities not given for all probes.")
 
-  combined_probes <- round(M + U, digits = 0)
-  rownames(combined_probes) <- substr(rownames(input@sites),1, 10)
-  colnames(combined_probes) <- input@pheno$Sample_Name
+    n <- input
+    if (nchar(names(n)[1]) > 10) {
+      probes <- substr(names(n), 1, nchar(names(n)) - 5)
+      n <- n[-which(duplicated(probes))]
+      names(n) <- probes[-which(duplicated(probes))]
+    }
 
-  object@intensity <- as.data.frame(combined_probes)
+    object@intensity <- data.frame(sampleid = n)
 
-  object <- CNV.check(object)
+    if (!is.null(names)) names(object) <- names
 
-  return(object)
-})
+    object <- CNV.check(object)
+
+    return(object)
+  }
+)
+
+#' @rdname CNV.load
+setMethod(
+  "CNV.load",
+  signature(input = "RnBeadRawSet"),
+  function(input, names = NULL) {
+    object <- new("CNV.data")
+    object@date <- date()
+
+    M <- input@M
+    U <- input@U
+
+    combined_probes <- round(M + U, digits = 0)
+    rownames(combined_probes) <- substr(rownames(input@sites), 1, 10)
+    colnames(combined_probes) <- input@pheno$Sample_Name
+
+    object@intensity <- as.data.frame(combined_probes)
+
+    object <- CNV.check(object)
+
+    return(object)
+  }
+)
 
 
 #' CNV.check
@@ -148,17 +182,12 @@ setGeneric("CNV.check", function(object) {
 
 #' @rdname CNV.check
 setMethod("CNV.check", signature(object = "CNV.data"), function(object) {
-
-  if (any(is.na(object@intensity)))
-    warning("some intensities are NA, now removed.")
+  if (any(is.na(object@intensity))) warning("some intensities are NA, now removed.")
   object@intensity <- na.omit(object@intensity)
-  if (any(object@intensity < 0))
-    warning("some intensities are smaller than 0, now set to 1.")
+  if (any(object@intensity < 0)) warning("some intensities are smaller than 0, now set to 1.")
   object@intensity[object@intensity < 1] <- 1
-  if (any(colMeans(object@intensity) < 5000))
-    warning("intensities are abnormally low (< 5000).")
-  if (any(colMeans(object@intensity) > 50000))
-    warning("intensities are abnormally high (> 50000).")
+  if (any(colMeans(object@intensity) < 5000)) warning("intensities are abnormally low (< 5000).")
+  if (any(colMeans(object@intensity) > 50000)) warning("intensities are abnormally high (> 50000).")
 
   return(object)
 })
@@ -175,15 +204,11 @@ setMethod("CNV.check", signature(object = "CNV.data"), function(object) {
 #' @author Volker Hovestadt \email{conumee@@hovestadt.bio}
 #' @export
 read.450k.url <- function(url = NULL, idat = NULL) {
-  if (is.null(url))
-    url <- "https://github.com/hovestadt/conumeeData/raw/master/"
-  if (is.null(idat))
-    idat <- c("6042324037_R05C02", "6042324037_R06C01")
+  if (is.null(url)) url <- "https://github.com/hovestadt/conumeeData/raw/master/"
+  if (is.null(idat)) idat <- c("6042324037_R05C02", "6042324037_R06C01")
   tmp <- paste0(tempdir(), .Platform$file.sep)
-  if (!grepl("/$", url))
-    url <- paste0(url, "/")
-  if (!any(grepl("_Grn.idat", idat)))
-    idat <- unlist(lapply(idat, paste0, c("_Grn.idat", "_Red.idat")))
+  if (!grepl("/$", url)) url <- paste0(url, "/")
+  if (!any(grepl("_Grn.idat", idat))) idat <- unlist(lapply(idat, paste0, c("_Grn.idat", "_Red.idat")))
   for (i in idat) .curl(url = paste0(url, i), file = paste0(tmp, i))
   idatRG <- read.metharray.exp(base = tmp)
   for (i in idat) file.remove(paste0(tmp, i))
@@ -192,25 +217,29 @@ read.450k.url <- function(url = NULL, idat = NULL) {
 
 .curl <- function(url, file, verbose = TRUE) {
   if (.Platform$OS.type == "unix") {
-    if (!RCurl::url.exists(url))
-      stop("url does not exist.")
+    if (!RCurl::url.exists(url)) stop("url does not exist.")
   } else {
-    if (!RCurl::url.exists(url, .opts = list(ssl.verifypeer = FALSE)))
-      stop("url does not exist.")
+    if (!RCurl::url.exists(url, .opts = list(ssl.verifypeer = FALSE))) stop("url does not exist.")
   }
-  if (verbose)
-    message("downloading ", tail(strsplit(url, "/")[[1]], 1), appendLF = FALSE)
+  if (verbose) message("downloading ", tail(strsplit(url, "/")[[1]], 1), appendLF = FALSE)
   f <- RCurl::CFILE(file, mode = "wb")
   if (.Platform$OS.type == "unix") {
-    r <- RCurl::curlPerform(url = url, writedata = f@ref, noprogress = TRUE,
-                            .opts = list(followlocation = TRUE))
+    r <- RCurl::curlPerform(
+      url = url,
+      writedata = f@ref,
+      noprogress = TRUE,
+      .opts = list(followlocation = TRUE)
+    )
   } else {
-    r <- RCurl::curlPerform(url = url, writedata = f@ref, noprogress = TRUE,
-                            .opts = list(followlocation = TRUE, ssl.verifypeer = FALSE))
+    r <- RCurl::curlPerform(
+      url = url,
+      writedata = f@ref,
+      noprogress = TRUE,
+      .opts = list(followlocation = TRUE, ssl.verifypeer = FALSE)
+    )
   }
   RCurl::close(f)
-  if (verbose)
-    message(" - done.")
+  if (verbose) message(" - done.")
 }
 
 
@@ -229,45 +258,69 @@ setGeneric("CNV.import", function(array_type, directory, sample_sheet, ...) {
 })
 
 #' @rdname CNV.import
-setMethod("CNV.import", signature(array_type = "character", directory = "character", sample_sheet = "data.frame"),
-          function(array_type = "EPICv2", directory = getwd(), sample_sheet = NULL) {
-            if(is.null(sample_sheet)){
-              stop("please provide a sample sheet")
-            }
+setMethod(
+  "CNV.import",
+  signature(
+    array_type = "character",
+    directory = "character",
+    sample_sheet = "data.frame"
+  ),
+  function(array_type = "EPICv2", directory = getwd(), sample_sheet = NULL) {
+    if (is.null(sample_sheet)) {
+      stop("please provide a sample sheet")
+    }
 
-            object <- new("data.frame")
+    object <- new("data.frame")
 
-            if(array_type == "mouse"){
-              anno <- CNV.import_mouse_data
-            }
+    if (array_type == "mouse") {
+      anno <- CNV.import_mouse_data
+    }
 
-            if(array_type == "EPICv2"){
-              anno <- CNV.import_EPICv2
-            }
+    if (array_type == "EPICv2") {
+      anno <- CNV.import_EPICv2
+    }
 
-            if(!array_type %in% c("mouse", "EPICv2")){
-              stop("Please choose EPICv2 or mouse as array_type.")
-            }
+    if (!array_type %in% c("mouse", "EPICv2")) {
+      stop("Please choose EPICv2 or mouse as array_type.")
+    }
 
-            lf <- list.files(directory, pattern=".idat$", full.names = TRUE)
+    lf <- list.files(directory, pattern = ".idat$", full.names = TRUE)
 
-            object <- suppressWarnings(do.call(cbind, lapply(sample_sheet$Sample_Name, function(i) {
-              message(i)
-              f <- lf[grepl(paste0(sample_sheet[match(i, sample_sheet$Sample_Name), "Sentrix_ID"], "_", sample_sheet[match(i, sample_sheet$Sample_Name), "Sentrix_Position"], "_Grn"), lf)]
-              g <- readIDAT(f)[["Quants"]]
-              r <- readIDAT(sub("_Grn", "_Red", f))[["Quants"]]
-              t1g <- g[anno[["type1g"]]$AddressA_ID, "Mean", drop = FALSE] + g[anno[["type1g"]]$AddressB_ID, "Mean"]
-              t1r <- r[anno[["type1r"]]$AddressA_ID, "Mean", drop = FALSE] + r[anno[["type1r"]]$AddressB_ID, "Mean"]
-              t2 <- g[anno[["type2"]]$AddressA_ID, "Mean", drop = FALSE] + r[anno[["type2"]]$AddressA_ID, "Mean"]
-              names(t1g) <- anno[["type1g"]]$Name
-              names(t1r) <- anno[["type1r"]]$Name
-              names(t2) <- anno[["type2"]]$Name
-              c(t1g, t1r, t2)
-            })))
-            colnames(object) <- sample_sheet$Sample_Name
-            object <- as.data.frame(object)
-            return(object)
-          })
+    object <- suppressWarnings(do.call(
+      cbind,
+      lapply(sample_sheet$Sample_Name, function(i) {
+        message(i)
+        f <- lf[grepl(
+          paste0(
+            sample_sheet[match(i, sample_sheet$Sample_Name), "Sentrix_ID"],
+            "_",
+            sample_sheet[
+              match(i, sample_sheet$Sample_Name),
+              "Sentrix_Position"
+            ],
+            "_Grn"
+          ),
+          lf
+        )]
+        g <- readIDAT(f)[["Quants"]]
+        r <- readIDAT(sub("_Grn", "_Red", f))[["Quants"]]
+        t1g <- g[anno[["type1g"]]$AddressA_ID, "Mean", drop = FALSE] +
+          g[anno[["type1g"]]$AddressB_ID, "Mean"]
+        t1r <- r[anno[["type1r"]]$AddressA_ID, "Mean", drop = FALSE] +
+          r[anno[["type1r"]]$AddressB_ID, "Mean"]
+        t2 <- g[anno[["type2"]]$AddressA_ID, "Mean", drop = FALSE] +
+          r[anno[["type2"]]$AddressA_ID, "Mean"]
+        names(t1g) <- anno[["type1g"]]$Name
+        names(t1r) <- anno[["type1r"]]$Name
+        names(t2) <- anno[["type2"]]$Name
+        c(t1g, t1r, t2)
+      })
+    ))
+    colnames(object) <- sample_sheet$Sample_Name
+    object <- as.data.frame(object)
+    return(object)
+  }
+)
 
 #' CNV.define_detail
 #' @description Create a \code{GRanges} object for detail regions. Downstream plotting functions will create individual plots for each detail region.
@@ -282,8 +335,8 @@ setMethod("CNV.import", signature(array_type = "character", directory = "charact
 #' @author Bjarne Daenekas \email{conumee@@hovestadt.bio}
 #' @export
 CNV.define_detail <- function(array_type = "450k", gene = "predefined") {
-  if(array_type %in% c("450k", "EPIC", "EPICv2")) {
-    if(gene[1] == "predefined"){
+  if (array_type %in% c("450k", "EPIC", "EPICv2")) {
+    if (gene[1] == "predefined") {
       message("using set of predefined regions (hg19 genome)")
       object <- new("GRanges")
       data("detail_regions")
@@ -291,19 +344,26 @@ CNV.define_detail <- function(array_type = "450k", gene = "predefined") {
       return(object)
     }
 
-    if(any(gene %in% genes$SYMBOL == FALSE)){
+    if (any(gene %in% genes$SYMBOL == FALSE)) {
       ind <- which(symbol %in% genes$SYMBOL == FALSE)
-      message(paste(symbol[ind]," is not part of the gene annotation. ", sep = ""))
+      message(paste(
+        symbol[ind],
+        " is not part of the gene annotation. ",
+        sep = ""
+      ))
     }
 
     subset <- genes[which(genes$SYMBOL %in% gene)]
-    subset$thick <- IRanges(start = start(subset) - 100000, end = end(subset) + 100000)
+    subset$thick <- IRanges(
+      start = start(subset) - 100000,
+      end = end(subset) + 100000
+    )
     colnames(mcols(subset)) <- c("name", "thick")
     names(subset) <- 1:length(subset)
     return(subset)
   }
-  if(array_type == "mouse") {
-    if(gene[1] == "predefined"){
+  if (array_type == "mouse") {
+    if (gene[1] == "predefined") {
       message("using set of predefined regions (mm10 genome)")
       object <- new("GRanges")
       data("detail_regions_mouse")
@@ -311,13 +371,20 @@ CNV.define_detail <- function(array_type = "450k", gene = "predefined") {
       return(object)
     }
 
-    if(any(gene %in% genes_mm10$SYMBOL == FALSE)){
+    if (any(gene %in% genes_mm10$SYMBOL == FALSE)) {
       ind <- which(gene %in% genes_mm10$SYMBOL == FALSE)
-      message(paste(gene[ind]," is not part of the gene annotation. ", sep = ""))
+      message(paste(
+        gene[ind],
+        " is not part of the gene annotation. ",
+        sep = ""
+      ))
     }
 
     subset <- genes_mm10[which(genes_mm10$SYMBOL %in% gene)]
-    subset$thick <- subset$thick <- IRanges(start = start(subset) - 100000, end = end(subset) + 100000)
+    subset$thick <- subset$thick <- IRanges(
+      start = start(subset) - 100000,
+      end = end(subset) + 100000
+    )
     colnames(mcols(subset)) <- c("name", "thick")
     names(subset) <- 1:length(subset)
     return(subset)
@@ -325,4 +392,3 @@ CNV.define_detail <- function(array_type = "450k", gene = "predefined") {
     message("please choose 450k, EPIC, EPICv2 or mouse as array_type")
   }
 }
-
