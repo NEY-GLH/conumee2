@@ -50,4 +50,4 @@ NULL
 # countOverlaps(detail_regions.gene, anno@probes)
 # values(detail_regions)$probes_promoter <-
 # countOverlaps(detail_regions.promoter, anno@probes)
-# save(detail_regions, file = 'data/detail_regions.rda') 
+# save(detail_regions, file = 'data/detail_regions.rda')

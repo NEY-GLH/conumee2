@@ -13,9 +13,19 @@
 #' show(anno)
 #' @author Volker Hovestadt, Bjarne Daenekas \email{conumee@@hovestadt.bio}
 #' @export
-setClass("CNV.anno", representation(date = "character", args = "list",
-                                    genome = "data.frame", gap = "GRanges", probes = "GRanges", exclude = "GRanges",
-                                    detail = "GRanges", bins = "GRanges"))
+setClass(
+  "CNV.anno",
+  representation(
+    date = "character",
+    args = "list",
+    genome = "data.frame",
+    gap = "GRanges",
+    probes = "GRanges",
+    exclude = "GRanges",
+    detail = "GRanges",
+    bins = "GRanges"
+  )
+)
 
 #' @rdname CNV.anno-class
 #' @importFrom methods show
@@ -27,17 +37,40 @@ setMethod("show", "CNV.anno", function(object) {
   cat("  @genome   : ", nrow(object@genome), " chromosomes\n", sep = "")
   cat("  @gap      : ", length(object@gap), " regions\n", sep = "")
   cat("  @probes   : ", length(object@probes), " probes\n", sep = "")
-  cat("  @exclude  : ", length(object@exclude), " regions (overlapping ",
-      length(findOverlaps(object@probes, object@exclude)), " probes)\n",
-      sep = "")
-  cat("  @detail   : ", length(object@detail), " regions (overlapping ",
-      length(findOverlaps(object@probes, object@detail)), " probes)\n",
-      sep = "")
-  cat("  @bins     : ", length(object@bins), " bins (min/avg/max size: ",
-      object@args$bin_minsize/1000, "/", suppressWarnings(round(mean(width(object@bins))/1000,
-                                                                1)), "/", object@args$bin_maxsize/1000, "kb, probes: ", object@args$bin_minprobes,
-      "/", suppressWarnings(round(mean(values(object@bins)$probes), 1)),
-      "/", max(values(object@bins)$probes), ")\n", sep = "")
+  cat(
+    "  @exclude  : ",
+    length(object@exclude),
+    " regions (overlapping ",
+    length(findOverlaps(object@probes, object@exclude)),
+    " probes)\n",
+    sep = ""
+  )
+  cat(
+    "  @detail   : ",
+    length(object@detail),
+    " regions (overlapping ",
+    length(findOverlaps(object@probes, object@detail)),
+    " probes)\n",
+    sep = ""
+  )
+  cat(
+    "  @bins     : ",
+    length(object@bins),
+    " bins (min/avg/max size: ",
+    object@args$bin_minsize / 1000,
+    "/",
+    suppressWarnings(round(mean(width(object@bins)) / 1000, 1)),
+    "/",
+    object@args$bin_maxsize / 1000,
+    "kb, probes: ",
+    object@args$bin_minprobes,
+    "/",
+    suppressWarnings(round(mean(values(object@bins)$probes), 1)),
+    "/",
+    max(values(object@bins)$probes),
+    ")\n",
+    sep = ""
+  )
 })
 
 #' CNV.data class
@@ -57,7 +90,10 @@ setMethod("show", "CNV.anno", function(object) {
 #' d[1:2]
 #' @author Volker Hovestadt, Bjarne Daenekas \email{conumee@@hovestadt.bio}
 #' @export
-setClass("CNV.data", representation(date = "character", intensity = "data.frame"))
+setClass(
+  "CNV.data",
+  representation(date = "character", intensity = "data.frame")
+)
 
 #' @rdname CNV.data-class
 #' @param object \code{CNV.data} object
@@ -67,8 +103,14 @@ setMethod("show", "CNV.data", function(object) {
   if (length(object@intensity) == 0) {
     cat("  @intensity : unavailable, run CNV.load\n", sep = "")
   } else {
-    cat("  @intensity : available (", ncol(object@intensity), " samples, ",
-        nrow(object@intensity), " probes)\n", sep = "")
+    cat(
+      "  @intensity : available (",
+      ncol(object@intensity),
+      " samples, ",
+      nrow(object@intensity),
+      " probes)\n",
+      sep = ""
+    )
   }
 })
 
@@ -125,7 +167,18 @@ setReplaceMethod("names", signature(x = "CNV.data"), function(x, value) {
 #' CNV.write(x, what = 'segments')
 #' @author Volker Hovestadt, Bjarne Daenekas \email{conumee@@hovestadt.bio}
 #' @export
-setClass("CNV.analysis", representation(name = "character", date = "character",anno = "CNV.anno", fit = "list", bin = "list", detail = "list", seg = "list"))
+setClass(
+  "CNV.analysis",
+  representation(
+    name = "character",
+    date = "character",
+    anno = "CNV.anno",
+    fit = "list",
+    bin = "list",
+    detail = "list",
+    seg = "list"
+  )
+)
 
 #' @rdname CNV.analysis-class
 #' @param object \code{CNV.analysis} object
@@ -133,32 +186,61 @@ setMethod("show", "CNV.analysis", function(object) {
   cat("CNV analysis object\n")
   cat("   created   : ", object@date, "\n", sep = "")
   cat("  @name      :", colnames(object@fit$ratio), "\n", sep = " ")
-  cat("  @anno      : ", nrow(object@anno@genome), " chromosomes, ",
-      length(object@anno@probes), " probes, ", length(object@anno@bins),
-      " bins\n", sep = "")
+  cat(
+    "  @anno      : ",
+    nrow(object@anno@genome),
+    " chromosomes, ",
+    length(object@anno@probes),
+    " probes, ",
+    length(object@anno@bins),
+    " bins\n",
+    sep = ""
+  )
   if (length(object@fit) == 0) {
     cat("  @fit       : unavailable, run CNV.fit\n", sep = "")
   } else {
-    cat("  @fit       : available (", ncol(object@fit$ratio), "sample(s), noise:", round(object@fit$noise,
-                                                                                         2), ")\n", sep = " ")
+    cat(
+      "  @fit       : available (",
+      ncol(object@fit$ratio),
+      "sample(s), noise:",
+      round(object@fit$noise, 2),
+      ")\n",
+      sep = " "
+    )
   }
   if (length(object@bin) == 0) {
     cat("  @bin       : unavailable, run CNV.bin\n", sep = "")
   } else {
-    cat("  @bin       : available (", ncol(object@fit$ratio), "sample(s), shift:", round(object@bin$shift,
-                                                                                         2), ")\n", sep = " ")
+    cat(
+      "  @bin       : available (",
+      ncol(object@fit$ratio),
+      "sample(s), shift:",
+      round(object@bin$shift, 2),
+      ")\n",
+      sep = " "
+    )
   }
   if (length(object@detail) == 0) {
     cat("  @detail    : unavailable, run CNV.detail\n", sep = "")
   } else {
-    cat("  @detail    : available (", length(object@detail$ratio[[1]]),
-        " regions)\n", sep = "")
+    cat(
+      "  @detail    : available (",
+      length(object@detail$ratio[[1]]),
+      " regions)\n",
+      sep = ""
+    )
   }
   if (length(object@seg) == 0) {
     cat("  @seg       : unavailable, run CNV.segment\n", sep = "")
   } else {
-    cat("  @seg       : available (", ncol(object@fit$ratio), " sample(s), ", sum(unlist(lapply(object@seg$summary, nrow))), " segments)\n",
-        sep = "")
+    cat(
+      "  @seg       : available (",
+      ncol(object@fit$ratio),
+      " sample(s), ",
+      sum(unlist(lapply(object@seg$summary, nrow))),
+      " segments)\n",
+      sep = ""
+    )
   }
 })
 
@@ -175,15 +257,15 @@ setReplaceMethod("names", signature(x = "CNV.analysis"), function(x, value) {
     colnames(x@fit$coef) <- value
     colnames(x@fit$ratio) <- value
     names(x@fit$noise) <- value
-    if(!is.null(x@bin$ratio)){
+    if (!is.null(x@bin$ratio)) {
       names(x@bin$ratio) <- value
       names(x@bin$variance) <- value
       names(x@bin$shift) <- value
     }
-    if(!is.null(x@detail$ratio)){
+    if (!is.null(x@detail$ratio)) {
       names(x@detail$ratio) <- value
     }
-    if(!is.null(x@detail$amp.bins)){
+    if (!is.null(x@detail$amp.bins)) {
       names(x@detail$amp.bins) <- value
       names(x@detail$del.bins) <- value
       names(x@detail$amp.detail.regions) <- value
@@ -191,7 +273,7 @@ setReplaceMethod("names", signature(x = "CNV.analysis"), function(x, value) {
       names(x@detail$amp.cancer.genes) <- value
       names(x@detail$del.cancer.genes) <- value
     }
-    if(!is.null(x@seg$summary)){
+    if (!is.null(x@seg$summary)) {
       names(x@seg$summary) <- value
       names(x@seg$p) <- value
     }
@@ -214,8 +296,8 @@ setMethod("coef", signature(object = "CNV.analysis"), function(object) {
 #' @param i index. \code{logical}, \code{numeric} or \code{character}.
 #' @export
 setMethod("[", signature(x = "CNV.analysis"), function(x, i) {
-  x@fit$coef <- x@fit$coef[,i, drop = FALSE]
-  x@fit$ratio <- x@fit$ratio[,i, drop = FALSE]
+  x@fit$coef <- x@fit$coef[, i, drop = FALSE]
+  x@fit$ratio <- x@fit$ratio[, i, drop = FALSE]
   x@fit$noise <- x@fit$noise[i, drop = FALSE]
   x@bin$ratio <- x@bin$ratio[i, drop = FALSE]
   x@bin$variance <- x@bin$variance[i, drop = FALSE]
