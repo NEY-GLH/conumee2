@@ -624,7 +624,7 @@ setMethod(
 
       # set up our plot
       plot <- ggplot() +
-        theme_minimal()
+        theme_classic()
 
       # plot(NA, xlim = c(0, sum(as.numeric(object@anno@genome[chr, "size"])) -
       #                     0), ylim = ylim, xaxs = "i", xaxt = "n", yaxt = "n", xlab = NA,
@@ -697,12 +697,15 @@ setMethod(
       #       bin.ratio, type = "p", pch = 16, cex = p_size, col = bin.ratio.cols)
 
       plot <- plot +
-        geom_point(aes(
-          x = chr.cumsum0[as.vector(seqnames(object@anno@bins))] +
-            values(object@anno@bins)$midpoint,
-          y = bin.ratio,
-          colour = bin.ratio.cols
-        ))
+        geom_point(
+          aes(
+            x = chr.cumsum0[as.vector(seqnames(object@anno@bins))] +
+              values(object@anno@bins)$midpoint,
+            y = bin.ratio,
+            colour = bin.ratio.cols,
+          ),
+          show.legend = FALSE
+        )
 
       for (l in seq(length(object@seg$summary[[i]]$seg.median))) {
         plot <- plot +
@@ -723,7 +726,8 @@ setMethod(
               ) -
                 object@bin$shift[i],
               colour = "darkblue"
-            )
+            ),
+            show.legend = FALSE
           )
 
         # lines(c(object@seg$summary[[i]]$loc.start[l] + chr.cumsum0[object@seg$summary[[i]]$chrom[l]],
@@ -760,7 +764,8 @@ setMethod(
                 chr.cumsum0[as.vector(seqnames(object@anno@detail))],
               y = detail.ratio,
               colour = "black"
-            )
+            ),
+            show.legend = FALSE
           )
 
         # text(
@@ -775,15 +780,18 @@ setMethod(
         # )
 
         plot <- plot +
-          geom_text(aes(
-            x = start(object@anno@detail) +
-              (end(object@anno@detail) - start(object@anno@detail)) / 2 +
-              chr.cumsum0[as.vector(seqnames(object@anno@detail))],
-            y = ifelse(detail.ratio.above, detail.ratio, NA),
-            label = paste("  ", values(object@anno@detail)$name, sep = ""),
-            colour = "black",
-            angle = 90
-          ))
+          geom_text(
+            aes(
+              x = start(object@anno@detail) +
+                (end(object@anno@detail) - start(object@anno@detail)) / 2 +
+                chr.cumsum0[as.vector(seqnames(object@anno@detail))],
+              y = ifelse(detail.ratio.above, detail.ratio, NA),
+              label = paste("  ", values(object@anno@detail)$name, sep = ""),
+              colour = "black",
+              angle = 90
+            ),
+            show.legend = FALSE
+          )
 
         # text(
         #   start(object@anno@detail) +
@@ -806,7 +814,8 @@ setMethod(
               label = paste(values(object@anno@detail)$name, "  ", sep = ""),
               colour = "black",
               angle = 90
-            )
+            ),
+            show.legend = FALSE
           )
 
         if (
@@ -849,13 +858,16 @@ setMethod(
           # )
 
           plot <- plot +
-            geom_point(aes(
-              x = start(sig.detail.regions) +
-                (end(sig.detail.regions) - start(sig.detail.regions)) / 2 +
-                chr.cumsum0[as.vector(seqnames(sig.detail.regions))],
-              y = sig.detail.regions.ratio,
-              colour = "red"
-            ))
+            geom_point(
+              aes(
+                x = start(sig.detail.regions) +
+                  (end(sig.detail.regions) - start(sig.detail.regions)) / 2 +
+                  chr.cumsum0[as.vector(seqnames(sig.detail.regions))],
+                y = sig.detail.regions.ratio,
+                colour = "red"
+              ),
+              show.legend = FALSE
+            )
 
           # text(
           #   start(sig.detail.regions) +
@@ -881,12 +893,13 @@ setMethod(
                 y = ifelse(
                   sig.detail.regions.ratio.above,
                   sig.detail.regions.ratio,
-                  NA
+                  Inf
                 ),
                 label = paste("  ", names(sig.detail.regions), sep = ""),
                 angle = 90,
                 colour = "red"
-              )
+              ),
+              show.legend = FALSE
             )
 
           # text(
@@ -905,18 +918,19 @@ setMethod(
           # )
 
           plot <- plot +
-            geom_point(
+            geom_text(
               aes(
                 x = start(sig.detail.regions) +
                   (end(sig.detail.regions) - start(sig.detail.regions)) / 2 +
                   chr.cumsum0[as.vector(seqnames(sig.detail.regions))],
                 y = ifelse(
                   sig.detail.regions.ratio.above,
-                  NA,
+                  Inf,
                   sig.detail.regions.ratio
                 ),
                 label = paste(names(sig.detail.regions), "  ", sep = "", angle = 90, colour = "red")
-              )
+              ),
+              show.legend = FALSE
             )
 
           if (sig_cgenes) {
@@ -951,6 +965,8 @@ setMethod(
 
             sig.cancer.genes <- cancer_genes[names(sig.cancer.genes.ratio)]
 
+            # Let's make a dataframe for plotting
+
             # lines(
             #   start(sig.cancer.genes) +
             #     (end(sig.cancer.genes) - start(sig.cancer.genes)) / 2 +
@@ -962,13 +978,16 @@ setMethod(
             # )
 
             plot <- plot +
-              geom_point(aes(
-                x = start(sig.cancer.genes) +
-                  (end(sig.cancer.genes) - start(sig.cancer.genes)) / 2 +
-                  chr.cumsum0[as.vector(seqnames(sig.cancer.genes))],
-                y = sig.cancer.genes.ratio,
-                colour = "red"
-              ))
+              geom_point(
+                aes(
+                  x = start(sig.cancer.genes) +
+                    (end(sig.cancer.genes) - start(sig.cancer.genes)) / 2 +
+                    chr.cumsum0[as.vector(seqnames(sig.cancer.genes))],
+                  y = sig.cancer.genes.ratio,
+                  colour = "red"
+                ),
+                show.legend = FALSE
+              )
 
             # text(
             #   start(sig.cancer.genes) +
@@ -982,15 +1001,18 @@ setMethod(
             # )
 
             plot <- plot +
-              geom_text(aes(
-                x = start(sig.detail.regions) +
-                  (end(sig.detail.regions) - start(sig.detail.regions)) / 2 +
-                  chr.cumsum0[as.vector(seqnames(sig.detail.regions))],
-                y = sig.detail.regions.ratio,
-                label = paste("  ", names(sig.cancer.genes), sep = ""),
-                colour = "red",
-                angle = 90
-              ))
+              geom_text(
+                aes(
+                  x = start(sig.detail.regions) +
+                    (end(sig.detail.regions) - start(sig.detail.regions)) / 2 +
+                    chr.cumsum0[as.vector(seqnames(sig.detail.regions))],
+                  y = sig.detail.regions.ratio,
+                  label = paste("  ", names(sig.cancer.genes), sep = ""),
+                  colour = "red",
+                  angle = 90
+                ),
+                show.legend = FALSE
+              )
 
             # text(
             #   start(sig.cancer.genes) +
@@ -1004,15 +1026,18 @@ setMethod(
             # )
 
             plot <- plot +
-              geom_text(aes(
-                x = start(sig.cancer.genes) +
-                  (end(sig.cancer.genes) - start(sig.cancer.genes)) / 2 +
-                  chr.cumsum0[as.vector(seqnames(sig.cancer.genes))],
-                y = ifelse(sig.cancer.genes.ratio.above, NA, sig.cancer.genes.ratio),
-                label = paste("  ", names(sig.cancer.genes), sep = ""),
-                colour = "red",
-                angle = 90
-              ))
+              geom_text(
+                aes(
+                  x = start(sig.cancer.genes) +
+                    (end(sig.cancer.genes) - start(sig.cancer.genes)) / 2 +
+                    chr.cumsum0[as.vector(seqnames(sig.cancer.genes))],
+                  y = ifelse(sig.cancer.genes.ratio.above, NA, sig.cancer.genes.ratio),
+                  label = paste("  ", names(sig.cancer.genes), sep = ""),
+                  colour = "red",
+                  angle = 90
+                ),
+                show.legend = FALSE
+              )
           }
         }
       }
@@ -2152,206 +2177,3 @@ setMethod(
     }
   }
 )
-
-
-#' CNV.plotly
-#'
-#' \code{CNV.plotly} plots an interactive copy number profile.
-#'
-#' @param x A \code{CNV.analysis} object after \code{CNV.segment} and \code{CNV.detail} is performed.
-#' @param sample character. Name of the single sample that should be plotted. Default to first sample in the set of query samples. Check sample names with \code{colnames(object@@fit$ratio)}
-#' @export
-#' @import ggplot2
-#' @import plotly
-
-CNV.plotly <- function(x, sample = colnames(x@fit$ratio)[1]) {
-  if (!any(colnames(x@fit$coef) == sample)) {
-    stop(message("Please provide the correct sample name."))
-  }
-
-  if (is.null(x@anno@detail)) {
-    stop("Please use CNV.detail prior to CNV.plotly.")
-  }
-
-  sample_n <- which(colnames(x@fit$coef) == sample)
-
-  ylim <- c(-1.25, 1.25)
-  bin.ratio <- x@bin$ratio[[sample_n]] - x@bin$shift[sample_n]
-  bin.ratio[bin.ratio < ylim[1]] <- ylim[1]
-  bin.ratio[bin.ratio > ylim[2]] <- ylim[2]
-  cols2 <- c("darkblue", "darkblue", "lightgrey", "#F16729", "#F16729")
-
-  chr <- x@anno@genome$chr
-  chr.cumsum0 <- .cumsum0(x@anno@genome[chr, "size"], n = chr)
-
-  y <- chr.cumsum0[as.vector(seqnames(x@anno@bins))] +
-    values(x@anno@bins)$midpoint
-
-  chrs <- .cumsum0(x@anno@genome[chr, "size"], right = TRUE)
-  chr.cumsum0 <- .cumsum0(x@anno@genome[chr, "size"], n = chr)
-
-  if (ncol(x@anno@genome) == 3) {
-    chrspq <- .cumsum0(x@anno@genome[chr, "size"]) + x@anno@genome[chr, "pq"]
-  }
-
-  tickl <- .cumsum0(x@anno@genome[chr, "size"]) + x@anno@genome[chr, "size"] / 2
-
-  cols <- c("darkblue", "darkblue", "lightgrey", "#F16729", "#F16729")
-  bin.ratio.cols <- apply(
-    colorRamp(cols)((bin.ratio + max(abs(ylim))) / (2 * max(abs(ylim)))),
-    1,
-    function(x) rgb(x[1], x[2], x[3], maxColorValue = 255)
-  )
-
-  df <- data.frame(y, bin.ratio, bin.ratio.cols)
-
-  xs <- x@seg$summary[[sample_n]]$loc.start +
-    chr.cumsum0[x@seg$summary[[sample_n]]$chrom]
-  xe <- x@seg$summary[[sample_n]]$loc.end +
-    chr.cumsum0[x@seg$summary[[sample_n]]$chrom]
-  ys <- x@seg$summary[[sample_n]]$seg.median - x@bin$shift[sample_n]
-  ye <- x@seg$summary[[sample_n]]$seg.median - x@bin$shift[sample_n]
-
-  df2 <- data.frame(xs, xe, ys, ye)
-
-  detail.ratio <- x@detail$ratio[[sample_n]] - x@bin$shift[sample_n]
-  detail.ratio[detail.ratio < ylim[1]] <- ylim[1]
-  detail.ratio[detail.ratio > ylim[2]] <- ylim[2]
-  detail.ratio.above <- (detail.ratio > 0 & detail.ratio < 0.85) |
-    detail.ratio < -0.85
-
-  detail.x <- start(x@anno@detail) +
-    (end(x@anno@detail) - start(x@anno@detail)) / 2 +
-    chr.cumsum0[as.vector(seqnames(x@anno@detail))]
-
-  df3 <- data.frame(detail.ratio, detail.x, names = values(x@anno@detail)$name)
-
-  if (ncol(x@anno@genome) == 3) {
-    p <- ggplot(df, aes(x = y, y = bin.ratio)) +
-      geom_point(colour = bin.ratio.cols, size = .5) +
-      geom_vline(xintercept = chrs, color = "black", size = 0.1) +
-      theme_bw() +
-      ggtitle(names(x@fit$coef[sample_n])) +
-      theme(text = element_text(family = "Arial")) +
-      geom_vline(
-        xintercept = chrspq,
-        color = "black",
-        size = .1,
-        linetype = "dotted"
-      ) +
-      ylim(-1.25, 1.25) +
-      geom_segment(
-        aes(x = xs, y = ys, xend = xe, yend = ye),
-        size = .5,
-        data = df2,
-        color = "darkblue"
-      ) +
-      xlab("") +
-      ylab("") +
-      geom_point(
-        aes(x = detail.x, y = detail.ratio),
-        size = 1.15,
-        alpha = 0.9,
-        data = df3,
-        color = "red"
-      ) +
-      scale_x_continuous(breaks = tickl, labels = c(chr)) + # ,expand = c(0, 0),limits = c(0, max(x)))+
-      theme(axis.text.x = element_text(size = 10, angle = 90))
-
-    ggp <- ggplotly(p)
-    ggpb <- plotly_build(ggp)
-
-    ggpb$x$data[[1]]$text <- paste0(
-      seqnames(x@anno@bins),
-      "<br>",
-      "start: ",
-      start(x@anno@bins),
-      "<br>",
-      "end: ",
-      end(x@anno@bins),
-      "<br>",
-      "probes: ",
-      values(x@anno@bins)$probes,
-      "<br>",
-      "genes: ",
-      x@anno@bins$genes
-    )
-    ggpb$x$data[[2]]$text <- ""
-    ggpb$x$data[[3]]$text <- ""
-    ggpb$x$data[[4]]$text <- paste0(
-      x@seg$summary[[sample_n]]$chrom,
-      "<br>",
-      "start: ",
-      x@seg$summary[[sample_n]]$loc.start,
-      "<br>",
-      "end: ",
-      x@seg$summary[[sample_n]]$loc.end,
-      "<br>",
-      "median: ",
-      x@seg$summary[[sample_n]]$seg.median
-    )
-    ggpb$x$data[[5]]$text <- values(x@anno@detail)$name
-    ggpb %>% suppressWarnings(toWebGL())
-  }
-
-  if (ncol(x@anno@genome) == 2) {
-    p <- ggplot(df, aes(x = y, y = bin.ratio)) +
-      geom_point(colour = bin.ratio.cols, size = .5) +
-      geom_vline(xintercept = chrs, color = "black", size = 0.1) +
-      theme_bw() +
-      ggtitle(names(x@fit$coef[sample_n])) +
-      theme(text = element_text(family = "Arial")) +
-      ylim(-1.25, 1.25) +
-      geom_segment(
-        aes(x = xs, y = ys, xend = xe, yend = ye),
-        size = .5,
-        data = df2,
-        color = "darkblue"
-      ) +
-      xlab("") +
-      ylab("") +
-      geom_point(
-        aes(x = detail.x, y = detail.ratio),
-        size = 1.15,
-        alpha = 0.9,
-        data = df3,
-        color = "red"
-      ) +
-      scale_x_continuous(breaks = tickl, labels = c(chr)) + # ,expand = c(0, 0),limits = c(0, max(x)))+
-      theme(axis.text.x = element_text(size = 10, angle = 90))
-
-    ggp <- ggplotly(p)
-    ggpb <- plotly_build(ggp)
-
-    ggpb$x$data[[1]]$text <- paste0(
-      seqnames(x@anno@bins),
-      "<br>",
-      "start: ",
-      start(x@anno@bins),
-      "<br>",
-      "end: ",
-      end(x@anno@bins),
-      "<br>",
-      "probes: ",
-      values(x@anno@bins)$probes,
-      "<br>",
-      "genes: ",
-      x@anno@bins$genes
-    )
-    ggpb$x$data[[2]]$text <- paste0(
-      x@seg$summary[[sample_n]]$chrom,
-      "<br>",
-      "start: ",
-      x@seg$summary[[sample_n]]$loc.start,
-      "<br>",
-      "end: ",
-      x@seg$summary[[sample_n]]$loc.end,
-      "<br>",
-      "median: ",
-      x@seg$summary[[sample_n]]$seg.median
-    )
-    ggpb$x$data[[4]]$text <- values(x@anno@detail)$name
-    ggpb %>% suppressWarnings(toWebGL())
-  }
-  return(ggpb)
-}
