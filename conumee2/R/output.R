@@ -653,11 +653,30 @@ setMethod(
 
       # TODO fix
       # axis(1, at = .cumsum0(object@anno@genome[chr, "size"]) + object@anno@genome[chr, "size"]/2, labels = object@anno@genome[chr, "chr"], las = 2)
-      # if (all(ylim == c(-1.25, 1.25))) {
-      #   axis(2, at = round(seq(-1.2, 1.2, 0.4), 1), las = 2)
-      # } else {
-      #   axis(2, las = 2)
-      # }
+
+      chr_midpoints <- data.frame(
+        chr = object@anno@genome$chr,
+        midpoint = cumsum(as.numeric(object@anno@genome$size)) - as.numeric(object@anno@genome$size) / 2
+      )
+      
+      #  set continous x axis with breaks
+      plot <- plot +
+        scale_x_continuous(
+          breaks = chr_midpoints$midpoint,
+          labels = chr_midpoints$chr
+        ) +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+      # set y limits
+      if (all(ylim == c(-1.25, 1.25))) {
+        plot <- plot +
+          scale_y_continuous(
+            limits = c(-1.25, 1.25),
+            breaks = round(seq(-1.2, 1.2, 0.4), 1)
+          )
+      } else {
+        plot <- plot + scale_y_continuous() 
+      }
 
       # ratio
       bin.ratio <- object@bin$ratio[[i]] - object@bin$shift[i]
@@ -702,32 +721,25 @@ setMethod(
             x = chr.cumsum0[as.vector(seqnames(object@anno@bins))] +
               values(object@anno@bins)$midpoint,
             y = bin.ratio,
-            colour = bin.ratio.cols,
           ),
+          colour = bin.ratio.cols,
           show.legend = FALSE
         )
 
       for (l in seq(length(object@seg$summary[[i]]$seg.median))) {
+        segment_data <- data.frame(
+          x_start = object@seg$summary[[i]]$loc.start[l] + chr.cumsum0[object@seg$summary[[i]]$chrom[l]],
+          x_end = object@seg$summary[[i]]$loc.end[l] + chr.cumsum0[object@seg$summary[[i]]$chrom[l]],
+          y = rep(min(ylim[2], max(ylim[1], object@seg$summary[[i]]$seg.median[l])), 2) - object@bin$shift[i]
+        )
+
+        # add lines as geom_segment
         plot <- plot +
-          geom_point(
-            aes(
-              x = c(
-                object@seg$summary[[i]]$loc.start[l] +
-                  chr.cumsum0[object@seg$summary[[i]]$chrom[l]],
-                object@seg$summary[[i]]$loc.end[l] +
-                  chr.cumsum0[object@seg$summary[[i]]$chrom[l]]
-              ),
-              y = rep(
-                min(
-                  ylim[2],
-                  max(ylim[1], object@seg$summary[[i]]$seg.median[l])
-                ),
-                2
-              ) -
-                object@bin$shift[i],
-              colour = "darkblue"
-            ),
-            show.legend = FALSE
+          geom_segment(
+            data = segment_data,
+            aes(x = x_start, xend = x_end, y = y, yend = y),
+            color = "darkblue",
+            linewidth = 2
           )
 
         # lines(c(object@seg$summary[[i]]$loc.start[l] + chr.cumsum0[object@seg$summary[[i]]$chrom[l]],
@@ -897,7 +909,7 @@ setMethod(
                 ),
                 label = paste("  ", names(sig.detail.regions), sep = ""),
                 angle = 90,
-                colour = "red"
+                colour = "black"
               ),
               show.legend = FALSE
             )
@@ -964,8 +976,6 @@ setMethod(
               sig.cancer.genes.ratio < -0.85
 
             sig.cancer.genes <- cancer_genes[names(sig.cancer.genes.ratio)]
-
-            # Let's make a dataframe for plotting
 
             # lines(
             #   start(sig.cancer.genes) +
