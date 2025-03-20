@@ -524,9 +524,9 @@ setMethod(
 #' ))))
 #'
 #' # output plots
-#' CNV.genomeplot(x)
-#' CNV.genomeplot(x, chr = "chr6")
-#' CNV.genomeplot(x, output = "pdf", directory = dir, sig_cgenes = TRUE)
+#' CNV.genomeggplot(x)
+#' CNV.genomeggplot(x, chr = "chr6")
+#' CNV.genomeggplot(x, output = "pdf", directory = dir, sig_cgenes = TRUE)
 #' CNV.detailplot(x, name = "PTEN")
 #' CNV.detailplot_wrap(x)
 #' CNV.summaryplot(x)
@@ -542,7 +542,7 @@ setGeneric("CNV.genomeggplot", function(object, ...) {
   standardGeneric("CNV.genomeggplot")
 })
 
-#' @rdname CNV.genomeplot
+#' @rdname CNV.genomeggplot
 setMethod(
   "CNV.genomeggplot",
   signature(object = "CNV.analysis"),
@@ -624,13 +624,28 @@ setMethod(
 
       # set up our plot
       plot <- ggplot() +
-        theme_classic()
+        theme_bw(base_size = 16)
 
       # plot(NA, xlim = c(0, sum(as.numeric(object@anno@genome[chr, "size"])) -
       #                     0), ylim = ylim, xaxs = "i", xaxt = "n", yaxt = "n", xlab = NA,
       #      ylab = NA, main = main[i])
       # abline(v = .cumsum0(object@anno@genome[chr, "size"], right = TRUE),
       #        col = "grey")
+
+      plot <- plot +
+        # xlim(0, sum(as.numeric(object@anno@genome[chr, "size"])) - 0) +
+        theme(
+          # axis.text.x = element_blank(),
+          # axis.text.y = element_blank(),
+          # axis.ticks = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5),
+          panel.grid = element_blank(),
+          plot.margin = margin(t = 3, r = 3, b = 3, l = 3, unit = "lines"),
+          axis.ticks.length = unit(0.5, "line"),
+        ) +
+        ggtitle(main[i])
 
       plot <- plot +
         geom_vline(
@@ -658,12 +673,13 @@ setMethod(
         chr = object@anno@genome$chr,
         midpoint = cumsum(as.numeric(object@anno@genome$size)) - as.numeric(object@anno@genome$size) / 2
       )
-      
+
       #  set continous x axis with breaks
       plot <- plot +
         scale_x_continuous(
           breaks = chr_midpoints$midpoint,
-          labels = chr_midpoints$chr
+          labels = chr_midpoints$chr,
+          expand = c(0, 0)
         ) +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
@@ -671,11 +687,11 @@ setMethod(
       if (all(ylim == c(-1.25, 1.25))) {
         plot <- plot +
           scale_y_continuous(
-            limits = c(-1.25, 1.25),
+            limits = ylim,
             breaks = round(seq(-1.2, 1.2, 0.4), 1)
           )
       } else {
-        plot <- plot + scale_y_continuous() 
+        plot <- plot + scale_y_continuous()
       }
 
       # ratio
@@ -739,7 +755,8 @@ setMethod(
             data = segment_data,
             aes(x = x_start, xend = x_end, y = y, yend = y),
             color = "darkblue",
-            linewidth = 2
+            lineend = "round",
+            linewidth = 0.66
           )
 
         # lines(c(object@seg$summary[[i]]$loc.start[l] + chr.cumsum0[object@seg$summary[[i]]$chrom[l]],
@@ -775,9 +792,9 @@ setMethod(
                 (end(object@anno@detail) - start(object@anno@detail)) / 2 +
                 chr.cumsum0[as.vector(seqnames(object@anno@detail))],
               y = detail.ratio,
-              colour = "black"
             ),
-            show.legend = FALSE
+            show.legend = FALSE,
+            colour = "black"
           )
 
         # text(
@@ -798,11 +815,12 @@ setMethod(
                 (end(object@anno@detail) - start(object@anno@detail)) / 2 +
                 chr.cumsum0[as.vector(seqnames(object@anno@detail))],
               y = ifelse(detail.ratio.above, detail.ratio, NA),
-              label = paste("  ", values(object@anno@detail)$name, sep = ""),
-              colour = "black",
+              label = values(object@anno@detail)$name,
               angle = 90
             ),
-            show.legend = FALSE
+            colour = "black",
+            show.legend = FALSE,
+            nudge_y = 0.1
           )
 
         # text(
@@ -819,15 +837,16 @@ setMethod(
         plot <- plot +
           geom_text(
             aes(
-              y = start(object@anno@detail) +
+              x = start(object@anno@detail) +
                 (end(object@anno@detail) - start(object@anno@detail)) / 2 +
                 chr.cumsum0[as.vector(seqnames(object@anno@detail))],
-              x = ifelse(detail.ratio.above, NA, detail.ratio),
-              label = paste(values(object@anno@detail)$name, "  ", sep = ""),
-              colour = "black",
+              y = ifelse(detail.ratio.above, NA, detail.ratio),
+              label = values(object@anno@detail)$name,
               angle = 90
             ),
-            show.legend = FALSE
+            colour = "black",
+            show.legend = FALSE,
+            nudge_y = -0.1
           )
 
         if (
@@ -876,9 +895,9 @@ setMethod(
                   (end(sig.detail.regions) - start(sig.detail.regions)) / 2 +
                   chr.cumsum0[as.vector(seqnames(sig.detail.regions))],
                 y = sig.detail.regions.ratio,
-                colour = "red"
               ),
-              show.legend = FALSE
+              show.legend = FALSE,
+              colour = "red"
             )
 
           # text(
@@ -909,8 +928,8 @@ setMethod(
                 ),
                 label = paste("  ", names(sig.detail.regions), sep = ""),
                 angle = 90,
-                colour = "black"
               ),
+              colour = "black",
               show.legend = FALSE
             )
 
@@ -942,6 +961,7 @@ setMethod(
                 ),
                 label = paste(names(sig.detail.regions), "  ", sep = "", angle = 90, colour = "red")
               ),
+              colour = "red",
               show.legend = FALSE
             )
 
@@ -994,9 +1014,9 @@ setMethod(
                     (end(sig.cancer.genes) - start(sig.cancer.genes)) / 2 +
                     chr.cumsum0[as.vector(seqnames(sig.cancer.genes))],
                   y = sig.cancer.genes.ratio,
-                  colour = "red"
                 ),
-                show.legend = FALSE
+                show.legend = FALSE,
+                colour = "red"
               )
 
             # text(
@@ -1018,10 +1038,10 @@ setMethod(
                     chr.cumsum0[as.vector(seqnames(sig.detail.regions))],
                   y = sig.detail.regions.ratio,
                   label = paste("  ", names(sig.cancer.genes), sep = ""),
-                  colour = "red",
                   angle = 90
                 ),
-                show.legend = FALSE
+                show.legend = FALSE,
+                colour = "red",
               )
 
             # text(
@@ -1043,9 +1063,9 @@ setMethod(
                     chr.cumsum0[as.vector(seqnames(sig.cancer.genes))],
                   y = ifelse(sig.cancer.genes.ratio.above, NA, sig.cancer.genes.ratio),
                   label = paste("  ", names(sig.cancer.genes), sep = ""),
-                  colour = "red",
                   angle = 90
                 ),
+                colour = "red",
                 show.legend = FALSE
               )
           }
